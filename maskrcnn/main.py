@@ -90,6 +90,7 @@ def main():
 
         imgorg = Image.open(imfile)
         img = transform(imgorg).cuda()
+        # TODO: predict batch of N images, with max batch size
         pred = model([img])
         _, pred_boxes, pred_class = process_pred(pred, CONFIDENCE)
 
