@@ -9,7 +9,9 @@ def res(ratio):
     
     for i in range(1, 201):
         print("foto pic ", i)
-        im = cv2.imread("C:/Users/lorec/friendly-pancake/classification/pic/books/pic{}.jpg".format(i),cv2.IMREAD_UNCHANGED)
+    
+        im = cv2.imread("C:/Users/albor/OneDrive - Danmarks Tekniske Universitet/Dokumenter/PFAS/project/friendly-pancake/classification/pic/books/pics/pic{}".format(i),cv2.IMREAD_UNCHANGED)   
+        #im = cv2.imread("C:/Users/lorec/friendly-pancake/classification/pic/books/pic{}.jpg".format(i),cv2.IMREAD_UNCHANGED)
 
         scale = ratio # percent of original size
         width = int(im.shape[1] * scale)
@@ -18,7 +20,8 @@ def res(ratio):
 
         im_resized = cv2.resize(im,dim,interpolation = cv2.INTER_AREA)
         
-        filename = "C:/Users/lorec/friendly-pancake/classification/pic/books/pic_res{}.jpg".format(i)
+        filename = "C:/Users/albor/OneDrive - Danmarks Tekniske Universitet/Dokumenter/PFAS/project/friendly-pancake/classification/pic/books/pics_resized/pic_res{}.jpg".format(i)        
+        #filename = "C:/Users/lorec/friendly-pancake/classification/pic/books/pic_res{}.jpg".format(i)
         cv2.imwrite(filename, im_resized)
 
         list.append(im_resized)

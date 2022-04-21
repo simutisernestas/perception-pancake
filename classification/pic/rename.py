@@ -6,8 +6,10 @@ import os
  
 # Function to rename multiple files
 def main():
-   
-    folder = "C:/Users/lorec/friendly-pancake/classification/pic/books"
+
+    folder = "C:/Users/albor/OneDrive - Danmarks Tekniske Universitet/Dokumenter/PFAS/project/friendly-pancake/classification/pic/books/pics"
+    # folder = "C:/Users/lorec/friendly-pancake/classification/pic/books"
+    
     for count, filename in enumerate(os.listdir(folder)):
         dst = f"pic{str(count+1)}.jpg"
         src =f"{folder}/{filename}"  # foldername/filename, if .py file is outside folder
