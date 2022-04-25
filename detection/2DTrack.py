@@ -10,8 +10,6 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
 data = np.load('../calibration/stereo.npz')
 cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, Tr, E, F = data['arr_0'], data[
     'arr_1'], data['arr_2'], data['arr_3'], data['arr_4'], data['arr_5'], data['arr_6'], data['arr_7']
@@ -36,7 +34,6 @@ max_red=190
 ##Image Processing##
 ####################
 
-
 img_left = glob.glob('../calibration/left/*.png')
 img_right = glob.glob('../calibration/right/*.png')
 #Rearrange
@@ -57,10 +54,7 @@ mog = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=16, detectSha
 ##### Settings #####
 ####################
 
-
 BG_method='MOG' ### MOG or KNN
-
-
 
 # this has to have undistorted image size
 map11, map12 = cv2.initUndistortRectifyMap(
@@ -68,11 +62,9 @@ map11, map12 = cv2.initUndistortRectifyMap(
 map21, map22 = cv2.initUndistortRectifyMap(
     cameraMatrix2, distCoeffs2, R2, P2, (w, h), cv2.CV_32FC1)
 
-
 ####################
 # Kalman filtering #
 ####################
-
 def update(x, P, Z, H, R):
     y = Z - H @ x
     S = H @ P @ H.T + R
@@ -125,6 +117,21 @@ H[2][2] = 1
 R = 5
 
 ####################
+# Classification #
+####################
+# TODO: IMPLEMENT!
+def classify(img):
+    return 'cup'
+
+
+font                   = cv2.FONT_HERSHEY_SIMPLEX
+bottomLeftCornerOfText = (10,580)
+fontScale              = .75
+fontColor              = (200,0,188)
+thickness              = 3
+lineType               = 2
+
+####################
 # Image Processing #
 ####################
 # x = []
@@ -136,12 +143,10 @@ for i in range(0,(len(img_left))):
     frame = cv2.imread(img_left[i])
     frame = cv2.remap(frame, map11, map12, cv2.INTER_AREA)
     frame = cv2.resize(frame, (800,600))
-    # frame = frame[200:600,250:700]
 
     frame_right = cv2.imread(img_right[i])
     frame_right = cv2.remap(frame_right, map21, map22, cv2.INTER_AREA)
     frame_right = cv2.resize(frame_right, (800,600))
-    # frame_right = frame_right[200:600,250:700]
 
     background = mog.apply(frame)
     background_right = mog.apply(frame_right)
@@ -169,44 +174,30 @@ for i in range(0,(len(img_left))):
 
     cv2.circle(frame,(int(center_left[0][0]),int(center_left[0][1])), 30, (0,0,255), -1)
     cv2.circle(frame_right,(int(center_right[0][0]),int(center_right[0][1])), 30, (0,0,255), -1)
-    mask_n_frame = np.hstack((frame,frame_right))
-    # mask_n_frame = np.hstack((frame,mask))
-    cv2.imshow('image',mask_n_frame)
-    cv2.waitKey(10)
     
+    # we kinda expect two centers would close to each other
+    # in right and left images : ))))
     if np.linalg.norm(center_left-center_right) < 7.5:
-        # print(center_left)
-        # print(center_right)
         pt3D = cv2.triangulatePoints(P1, P2, center_left[0], center_right[0])
-        # print(pt3D)
         Z = pt3D[:3]
         state,P = update(state, P, Z, H, R)
-        # x.append(pt3D[0][0])
-        # y.append(pt3D[1][0])
-        # z.append(pt3D[2][0])
         init = True
 
     if init:
         state,P = predict(state, P, F, u)
         state_buffer.append(state)
     
-    continue
-
-    (x,y,w,h) = cv2.boundingRect(cnt)
-    cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,10),1)
-    cv2.putText(frame,f'{BG_method}',(20,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0,255,0,2))
-    cv2.putText(frame,'Motion Detected',(20,40),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0,255,0,2))
-    #cv2.drawContours(background,cnt,-1,255,3)
-    cv2.drawContours(mask,cnt,-1,255,3)
-    
-    mask_n_frame = np.hstack((frame,mask))
+    cv2.putText(frame,f"x: {state[0]}, y: {state[1]}, z: {state[2]}", 
+            bottomLeftCornerOfText, 
+            font, 
+            fontScale,
+            fontColor,
+            thickness,
+            lineType)
+    mask_n_frame = np.hstack((frame,frame_right))
+    # mask_n_frame = np.hstack((frame,mask))
     cv2.imshow('image',mask_n_frame)
-    
-    key = cv2.waitKey(1)
-    if key == 27:
-        break
-
-
+    cv2.waitKey(10)
 
 # (N, 9)
 state_buffer = np.array(state_buffer)
