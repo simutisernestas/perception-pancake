@@ -10,6 +10,8 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
 data = np.load('../calibration/stereo.npz')
 cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, Tr, E, F = data['arr_0'], data[
     'arr_1'], data['arr_2'], data['arr_3'], data['arr_4'], data['arr_5'], data['arr_6'], data['arr_7']
@@ -49,8 +51,7 @@ w = img_shape[1]
 #### Background ####
 ####################
 
-mog = cv2.createBackgroundSubtractorMOG2()  
-knn = cv2.createBackgroundSubtractorKNN() 
+mog = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=16, detectShadows=False)
 
 ####################
 ##### Settings #####
@@ -60,10 +61,6 @@ knn = cv2.createBackgroundSubtractorKNN()
 BG_method='MOG' ### MOG or KNN
 
 
-####################
-# Image Processing #
-####################
-
 
 # this has to have undistorted image size
 map11, map12 = cv2.initUndistortRectifyMap(
@@ -71,9 +68,70 @@ map11, map12 = cv2.initUndistortRectifyMap(
 map21, map22 = cv2.initUndistortRectifyMap(
     cameraMatrix2, distCoeffs2, R2, P2, (w, h), cv2.CV_32FC1)
 
-x = []
-y = []
-z = []
+
+####################
+# Kalman filtering #
+####################
+
+def update(x, P, Z, H, R):
+    y = Z - H @ x
+    S = H @ P @ H.T + R
+    K = P @ H.T @ np.linalg.pinv(S)
+    Xprime = x + K @ y
+    KH = K @ H
+    Pprime = (np.eye(KH.shape[0]) - KH) @ P
+    return (Xprime,Pprime)
+    
+def predict(x, P, F, u):
+    Xprime = F @ x + u
+    Pprime = F @ P @ F.T
+    return (Xprime,Pprime)
+
+# Load the video
+cap = cv2.VideoCapture('../maskrcnn/video.avi')
+if not cap.isOpened():
+    print("Cannot open video")
+    exit()
+fps = cap.get(cv2.CAP_PROP_FPS)
+dt = 1/fps
+
+### Initialize Kalman filter ###
+# The initial state (6x1).
+# x y z x_dt y_dt z_dt x_dt2 y_dt2 z_dt2
+state = np.array([[0,0,0,0,0,0,0,0,0]]).T
+
+# # The initial uncertainty (6x6).
+P = np.eye(9,9) * 1000
+
+# # The external motion (6x1).
+u = np.array([[0,0,0,0,0,0,0,0,0]]).T
+
+# Jacobian
+F = np.eye(9)
+F[0][3] = dt
+F[1][4] = dt
+F[2][5] = dt
+F[0][6] = dt**2
+F[1][7] = dt**2
+F[2][8] = dt**2
+
+# # The observation matrix (2x6).
+H = np.zeros((3,9))
+H[0][0] = 1
+H[1][1] = 1
+H[2][2] = 1
+
+# # The measurement uncertainty.
+R = 5
+
+####################
+# Image Processing #
+####################
+# x = []
+# y = []
+# z = []
+init = False
+state_buffer = []
 for i in range(0,(len(img_left))):
     frame = cv2.imread(img_left[i])
     frame = cv2.remap(frame, map11, map12, cv2.INTER_AREA)
@@ -89,33 +147,49 @@ for i in range(0,(len(img_left))):
     background_right = mog.apply(frame_right)
         
     mask = np.zeros_like(frame)
+    mask_right = np.zeros_like(frame_right)
     
     contours,_ = cv2.findContours(background, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    contours = sorted(contours,key=cv2.contourArea,reverse= True)
+    contours = sorted(contours,key=cv2.contourArea, reverse=True)
 
     contours_right,_ = cv2.findContours(background_right, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    contours_right = sorted(contours_right,key=cv2.contourArea,reverse= True)
+    contours_right = sorted(contours_right,key=cv2.contourArea, reverse=True)
     
-    cnt = None
-    for cnt in contours:
-        if cv2.contourArea(cnt) < 4000:
-            continue
+    cnt = contours[0]
     center_left = cnt.mean(axis=0)
-    cnt_right = None
-    for cnt_right in contours_right:
-        if cv2.contourArea(cnt_right) < 4000:
-            continue
+    cnt_right = contours_right[0]
     center_right = cnt_right.mean(axis=0)
-    
-    if np.linalg.norm(center_left-center_right) < 30:
-        print(center_left)
-        print(center_right)
-        pt3D = cv2.triangulatePoints(P1, P2, center_left[0], center_right[0])
-        print(pt3D)
-        x.append(pt3D[0][0])
-        y.append(pt3D[1][0])
-        z.append(pt3D[2][0])
 
+    (x,y,w,h) = cv2.boundingRect(cnt)
+    print((x,y,w,h))
+    cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,10),10)
+    (x,y,w,h) = cv2.boundingRect(cnt_right)
+    print((x,y,w,h))
+    cv2.rectangle(frame_right,(x,y),(x+w,y+h),(0,255,10),10)
+
+    cv2.circle(frame,(int(center_left[0][0]),int(center_left[0][1])), 30, (0,0,255), -1)
+    cv2.circle(frame_right,(int(center_right[0][0]),int(center_right[0][1])), 30, (0,0,255), -1)
+    mask_n_frame = np.hstack((frame,frame_right))
+    # mask_n_frame = np.hstack((frame,mask))
+    cv2.imshow('image',mask_n_frame)
+    cv2.waitKey(10)
+    
+    if np.linalg.norm(center_left-center_right) < 7.5:
+        # print(center_left)
+        # print(center_right)
+        pt3D = cv2.triangulatePoints(P1, P2, center_left[0], center_right[0])
+        # print(pt3D)
+        Z = pt3D[:3]
+        state,P = update(state, P, Z, H, R)
+        # x.append(pt3D[0][0])
+        # y.append(pt3D[1][0])
+        # z.append(pt3D[2][0])
+        init = True
+
+    if init:
+        state,P = predict(state, P, F, u)
+        state_buffer.append(state)
+    
     continue
 
     (x,y,w,h) = cv2.boundingRect(cnt)
@@ -132,10 +206,15 @@ for i in range(0,(len(img_left))):
     if key == 27:
         break
 
+
+
+# (N, 9)
+state_buffer = np.array(state_buffer)
+
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 # Data for a three-dimensional line
-ax.scatter3D(x, y, x)
+ax.scatter3D(state_buffer[:,0], state_buffer[:,1], state_buffer[:,2])
 plt.show()
 
 cv2.destroyAllWindows()
