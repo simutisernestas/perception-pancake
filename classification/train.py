@@ -24,10 +24,10 @@ model_name = "inception"
 num_classes = 3
 
 # Batch size for training (change depending on how much memory you have)
-batch_size = 32
+batch_size = 64
 
 # Number of epochs to train for
-num_epochs = 15
+num_epochs = 10
 
 # Flag for feature extracting. When False, we finetune the whole model,
 #   when True we only update the reshaped layer params
@@ -222,6 +222,10 @@ if __name__ == '__main__':
     # Create training and validation datasets
     image_datasets = {x: datasets.ImageFolder(os.path.join(
         data_dir, x), data_transforms[x]) for x in ['train', 'val']}
+    
+    # print(image_datasets["train"].classes)
+    # exit()
+    
     # Create training and validation dataloaders
     dataloaders_dict = {x: torch.utils.data.DataLoader(
         image_datasets[x], batch_size=batch_size, shuffle=True, num_workers=4) for x in ['train', 'val']}
@@ -261,4 +265,6 @@ if __name__ == '__main__':
                                 num_epochs=num_epochs, is_inception=(model_name == "inception"))
 
     # Print the model we just instantiated
-    print(model_ft)
+    # print(model_ft)
+
+    torch.save(model_ft.state_dict(), 'model.torch')
