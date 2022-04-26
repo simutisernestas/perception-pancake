@@ -14,6 +14,9 @@ import numpy as np
 
 import pandas as pd
 
+from skimage.transform import resize
+from skimage.io import imread
+
 # Helper function for plotting the fit of your SVM.
 def plot_fit(X, y, clf):
     """
@@ -41,7 +44,32 @@ def plot_fit(X, y, clf):
     plt.yticks(())
 
 def main():
-    a = 0
+
+    Categories=['Box','Mug','Book']
+    flat_data_arr=[] #input array
+    target_arr=[] #output array
+    datadir='C:/Users/albor/OneDrive - Danmarks Tekniske Universitet/Dokumenter/PFAS/project/friendly-pancake/classification/pic' 
+    #path which contains all the categories of images
+    for i in Categories:
+    
+        print(f'loading... category : {i}')
+        path=os.path.join(datadir,i)
+        for img in os.listdir(path):
+
+            #HELP
+            img_array=imread(os.path.join(path,img).replace("\\","/")) #replace doesn't seem to work. Path is messed up
+            #HELP
+
+            img_resized=resize(img_array,(150,150,3))
+            flat_data_arr.append(img_resized.flatten())
+            target_arr.append(Categories.index(i))
+        print(f'loaded category:{i} successfully')
+    flat_data=np.array(flat_data_arr)
+    target=np.array(target_arr)
+    df=pd.DataFrame(flat_data) #dataframe
+    df['Target']=target
+    x=df.iloc[:,:-1] #input data 
+    y=df.iloc[:,-1] #output data
    
 
 if __name__ == "__main__":
