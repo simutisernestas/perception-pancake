@@ -45,21 +45,17 @@ def plot_fit(X, y, clf):
 
 def main():
 
-    Categories=['Box','Mug','Book']
+    Categories=['box','cup','book']
     flat_data_arr=[] #input array
     target_arr=[] #output array
-    datadir='C:/Users/albor/OneDrive - Danmarks Tekniske Universitet/Dokumenter/PFAS/project/friendly-pancake/classification/pic' 
+    datadir='C:/Users/albor/OneDrive - Danmarks Tekniske Universitet/Dokumenter/PFAS/project/friendly-pancake/classification/pic/train' 
     #path which contains all the categories of images
     for i in Categories:
     
         print(f'loading... category : {i}')
-        path=os.path.join(datadir,i)
+        path=os.path.join(datadir,i).replace("\\","/")
         for img in os.listdir(path):
-
-            #HELP
-            img_array=imread(os.path.join(path,img).replace("\\","/")) #replace doesn't seem to work. Path is messed up
-            #HELP
-
+            img_array=imread(os.path.join(path,img)) #replace doesn't seem to work. Path is messed up .replace("\\","/")
             img_resized=resize(img_array,(150,150,3))
             flat_data_arr.append(img_resized.flatten())
             target_arr.append(Categories.index(i))
@@ -70,7 +66,9 @@ def main():
     df['Target']=target
     x=df.iloc[:,:-1] #input data 
     y=df.iloc[:,-1] #output data
-   
-
+    
+    print(x.shape())
+    print(y.shape())
+    
 if __name__ == "__main__":
     main()
