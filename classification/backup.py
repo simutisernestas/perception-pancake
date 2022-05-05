@@ -11,9 +11,7 @@ from sklearn.svm import LinearSVC
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-
 import pandas as pd
-
 from skimage.transform import resize
 from skimage.io import imread
 
@@ -64,20 +62,12 @@ def main():
         print(f'loading... category : {i}')
         path=os.path.join(datadir,i).replace("\\","/")
         for img in os.listdir(path):
-            img_array=imread(os.path.join(path,img)) #replace doesn't seem to work. Path is messed up .replace("\\","/")
+            img_array=imread(os.path.join(path,img))
             img_resized=resize(img_array,(150,150,3))
             flat_data_arr.append(img_resized.flatten())
             target_arr.append(Categories.index(i))
         print(f'loaded category:{i} successfully')
     flat_data=np.array(flat_data_arr)
-    target=np.array(target_arr)
-    df=pd.DataFrame(flat_data) #dataframe
-    df['Target']=target
-    x=df.iloc[:,:-1] #input data 
-    y=df.iloc[:,-1] #output data
-    
-    print(x.shape())
-    print(y.shape())
     targets=np.array(target_arr)
 
 ##  Must convert to pandas for current plotting function
