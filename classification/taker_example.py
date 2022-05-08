@@ -6,6 +6,7 @@ from SGDnoPCA import mainno
 #THEN model_cup AND model_bb CAN BE USED ANYTIME TO PREDICT NEW IMAGES
 #############
 
+
 def is_cup(moddo, image):
     mod = moddo
     img = image
