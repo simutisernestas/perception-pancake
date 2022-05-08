@@ -44,7 +44,8 @@ class classifier():
             for img in os.listdir(path):
                 img_array = cv2.imread(os.path.join(path,img))
                 img_res = cv2.resize(img_array, (150,150), interpolation=cv2.INTER_AREA)
-                flat_data_arr.append(img_res.flatten())
+                img_gray = cv2.cvtColor(img_res, cv2.COLOR_BGR2GRAY)
+                flat_data_arr.append(img_gray.flatten())
                 target_arr.append(categories.index(i))
             print(f'loaded category:{i} successfully')
         #print("flat_list", len(flat_data_arr))
@@ -87,7 +88,8 @@ class classifier():
             for img in os.listdir(path):
                 img_array = cv2.imread(os.path.join(path,img))
                 img_res = cv2.resize(img_array, (150,150), interpolation=cv2.INTER_AREA)
-                flat_data_arr.append(img_res.flatten())
+                img_gray = cv2.cvtColor(img_res, cv2.COLOR_BGR2GRAY)
+                flat_data_arr.append(img_gray.flatten())
                 target_arr.append(categories.index(i))
             print(f'loaded category:{i} successfully')
         #print("flat_list", len(flat_data_arr))

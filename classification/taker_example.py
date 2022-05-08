@@ -1,15 +1,10 @@
 import cv2
 from SGDnoPCA import mainno
-#from randnoPCA import *
-#from PCAlinearSVC import *
-from joblib import dump, load
 
-"""principalComponents_ver = pca.transform([img_flat_ver])
-print("princ_size", principalComponents_ver.shape)
-print(f'Principal components:{principalComponents_ver[0]}')
-pred_ver = model.predict(principalComponents_ver)
-print("pred", pred_ver)"""
-
+#############
+#CALL load_classifier() ONCE IN THE DETECTION CODE, 
+#THEN model_cup AND model_bb CAN BE USED ANYTIME TO PREDICT NEW IMAGES
+#############
 
 def is_cup(moddo, image):
     mod = moddo
@@ -45,10 +40,11 @@ if __name__ == "__main__":
     mod_cup, mod_bb = load_classifier()
 
     ##LOAD IMAGE, RESIZE, GRAYSCALE AND FLATTEN IT##
-    url = "pic/val/validation_box.jpg"
+    url = "pic/val/validation_cup.jpg"
     image = cv2.imread(url)
     image_rs = cv2.resize(image, (150,150), interpolation=cv2.INTER_AREA)
-    image_flat = image_rs.flatten()
+    img_gray = cv2.cvtColor(image_rs, cv2.COLOR_BGR2GRAY)
+    image_flat = img_gray.flatten()
     print("image_flat", image_flat.shape)
 
     #CHECK IF IT IS A CUP OR NOT, (cup, else)
@@ -60,14 +56,3 @@ if __name__ == "__main__":
         pred_bb = bb(mod_bb, image_flat)
         print("pred_bb", pred_bb)
 
-
-
-
-    #model_cup = load('model_cup.joblib') #0 for cup, 1 for else
-    #model_bb = load('bb_model.joblib') #0 for box, 1 for book
-    #pca_cup = load('pca_cup.joblib')
-    #pca_bb = load('pca_bb.joblib')
-    #ceccho = classifier()
-    #print("pca cup",pca_cup)
-    #pca_cup, model_cup, pca_bb, model_bb = mainno()
-    
