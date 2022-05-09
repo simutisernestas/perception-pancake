@@ -32,8 +32,8 @@ class classifier():
         super().__init__()
         
         self.cup_model()
-        #self.bb_model()
-        self.verify()
+        self.bb_model()
+        #self.verify()
 
     def cup_model(self):
         categories = ['cup','box']
@@ -161,17 +161,17 @@ class classifier():
 
         start  =  timeit.default_timer()
 
-        #X_scaled  =  StandardScaler().fit_transform(flat_data)
-        #self.pca_bb  =  PCA(n_components  =  20)
+        X_scaled  =  StandardScaler().fit_transform(flat_data)
+        self.pca_bb  =  PCA(n_components  =  20)
 
         #dump(self.pca_bb,'pca_bb.joblib')
 
-        #self.principalComponents_bb  =  self.pca_bb.fit_transform(X_scaled)
-        #print(f'Principal components:{self.principalComponents_bb[0]}')
-        #print(self.pca_bb.explained_variance_ratio_)
-        #print(self.pca_bb.explained_variance_)
-        #X_train, X_test, y_train, y_test =  train_test_split(self.principalComponents_bb, targets, test_size = 0.4)
-        X_train, X_test, y_train, y_test =  train_test_split(flat_data, targets, test_size = 0.4)
+        self.principalComponents_bb  =  self.pca_bb.fit_transform(X_scaled)
+        print(f'Principal components:{self.principalComponents_bb[0]}')
+        print(self.pca_bb.explained_variance_ratio_)
+        print(self.pca_bb.explained_variance_)
+        X_train, X_test, y_train, y_test =  train_test_split(self.principalComponents_bb, targets, test_size = 0.4)
+        #X_train, X_test, y_train, y_test =  train_test_split(flat_data, targets, test_size = 0.4)
 
 
         svm  =  LinearSVC(penalty = 'l2', loss = 'squared_hinge', random_state = 0, max_iter = 10e4)
@@ -261,11 +261,10 @@ class classifier():
 
 
 
-#def mainno():
-if __name__ == "__main__":
+def mainno():
     c = classifier()
     
-    #return c
+    return c
     
     #picca = c.pca_cup
     #mod_cup= c.model_cup

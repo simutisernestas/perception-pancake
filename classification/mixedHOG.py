@@ -269,7 +269,7 @@ class classifier():
         print("lista_predizioni", lista_predizioni)
 
 
-def mainno():
+def mainhog():
     c = classifier()
     
     return c
