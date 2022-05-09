@@ -1,11 +1,11 @@
 import cv2
 from SGDnoPCA import mainno
 from mixedHOG import mainhog
+import os
 #############
 #CALL load_classifier() ONCE IN THE DETECTION CODE, 
 #THEN model_cup AND model_bb CAN BE USED ANYTIME TO PREDICT NEW IMAGES
 #############
-
 
 def is_cup(moddo, image):
     mod = moddo
@@ -22,7 +22,6 @@ def bb(moddo, image):
     img = image
     categories = ['box','book']
     print("Qui")
-
     print("The predicted image is : "+categories[mod.predict(img)[0]])
 
     return mod.predict(img)[0]
@@ -48,6 +47,32 @@ def load_classifier():
     return mod_cup, mod_bb
 
 if __name__ == "__main__":
+    ########HOG#########
+    mod_cup, mod_bb, grayify, hogify, scalify = load_classifier_hog()
+
+    url = "pic/val/validation_box.jpg"
+    path_books= "pic/val/test"
+    lista_predizioni= []
+    for img in os.listdir(path_books):
+        image = cv2.imread(url)
+        im_rs = cv2.resize(image, (150,150), interpolation=cv2.INTER_AREA)
+        image_gray = grayify.transform(im_rs)
+        image_hog = hogify.transform([image_gray])
+        image_prepared = scalify.transform(image_hog)
+
+        pred = is_cup(mod_cup, image_prepared)
+        if pred == 0:
+            print("cup")
+        if pred == 1:
+            pred_bb = bb(mod_bb, image_prepared)
+            if pred_bb == 0:
+                print("book")
+            if pred_bb == 1:
+                print("box")
+
+    print("a lista", lista_predizioni)
+
+
 
     """#####SGD#####
     ##LOAD MODEL##
@@ -69,24 +94,3 @@ if __name__ == "__main__":
     if pred == 1:
         pred_bb = bb(mod_bb, image_flat)
         print("pred_bb", pred_bb)"""
-
-
-    ########HOG#########
-    mod_cup, mod_bb, grayify, hogify, scalify = load_classifier_hog()
-
-    url = "pic/val/validation_cup.jpg"
-    image = cv2.imread(url)
-    im_rs = cv2.resize(image, (150,150), interpolation=cv2.INTER_AREA)
-    
-    image_gray = grayify.transform(im_rs)
-    image_hog = hogify.transform([image_gray])
-    image_prepared = scalify.transform(image_hog)
-
-    pred = is_cup(mod_cup, image_prepared)
-    print("pred", pred)
-
-    #IF IT IS NOT A CUP, CHECK IF IT IS A BOX OR A BOOK, (box, book)
-    if pred == 1:
-        pred_bb = bb(mod_bb, image_prepared)
-        print("pred_bb", pred_bb)
-

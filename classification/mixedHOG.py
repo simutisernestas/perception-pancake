@@ -10,6 +10,7 @@ from sklearn.svm import LinearSVC
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import SGDClassifier
 import cv2
+from joblib import dump
 
 ##########
 #RGB2GrayTransformer and RGB2GrayTransformer prepare the data
@@ -72,10 +73,10 @@ class classifier():
         self.cup_model()
         self.bb_model()
         #self.verify()
-        #self.book_verify()
+        self.book_verify()
 
     def cup_model(self):
-        categories = ['cup','box']
+        categories = ['cup','else']
         flat_data_arr = [] #input array
         target_arr = [] #output array
         datadir = 'pic/train' 
@@ -119,8 +120,9 @@ class classifier():
          
         print(X_train_prepared.shape)
 
-        weights = {0 : 0.7, 1 : 0.3}
-        self.sgd_clf_cup = LinearSVC(random_state=42,max_iter=2000, tol=1e-8, class_weight=weights)
+        weights = {0 : 0.4, 1 : 0.6}
+        #self.sgd_clf_cup = LinearSVC(random_state=42,max_iter=2000, tol=1e-8, class_weight=weights)
+        self.sgd_clf_cup = SGDClassifier(random_state=42,max_iter=2000, tol=1e-8)
         self.sgd_clf_cup.fit(X_train_prepared, y_train)
 
         X_test_gray = self.grayify.transform(X_test)
