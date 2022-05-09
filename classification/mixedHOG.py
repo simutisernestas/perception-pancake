@@ -270,8 +270,8 @@ class classifier():
         print("pred_fin", pred)
         print("lista_predizioni", lista_predizioni)
 
-if __name__ == "__main__":
-#def mainhog():
+
+def mainhog():
     c = classifier()
     
-    #return c
+    return c
